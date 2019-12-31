@@ -1,0 +1,26 @@
+<launch>
+	<arg name="pkg_name" value="sound_localize"/>
+	<arg name="node_name" value="sw_extract"/>
+	<arg name="config_file" default="robot_tags"/>
+	<arg name="visualization" default="true"/>
+	<arg name="filter" default="true"/>
+	<arg name="filter_threshold" default="20"/>
+	<arg name="joy_switch" default="true"/>
+
+  <node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)"  output="screen">
+		<param name="visualization" value="$(arg visualization)" />
+		<rosparam command="load" file="$(find sound_localize)/config/$(arg config_file).yaml"/>
+	</node>
+
+	<group if="$(arg filter)">
+		<include file="$(find sound_localize)/launch/bearing_filter.launch">
+			<arg name="filter_threshold" value="$(arg filter_threshold)"/>
+		</include>
+	</group>
+
+	<group if="$(arg joy_switch)">
+		<include file="$(find sound_localize)/launch/bearing_switch.launch">
+		</include>
+	</group>
+
+</launch>

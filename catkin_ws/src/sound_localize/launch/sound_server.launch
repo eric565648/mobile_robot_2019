@@ -1,0 +1,16 @@
+<launch>
+	<arg name="pkg_name" value="sound_localize"/>
+	<arg name="node_name" value="sound_server"/>
+	<arg name="IP" default="192.168.50.7"/>
+
+  <!-- <node pkg="$(arg pkg_name)" type="server_main.py" name="$(arg node_name)"  output="screen">
+		<param name="IP" value="$(arg IP)" />
+	</node> -->
+
+	<node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)"  output="screen">
+		<param name="IP" value="$(arg IP)" />
+	</node>
+	<node pkg="$(arg pkg_name)" type="doa_algorithm.py" name="sound_doa"  output="screen">
+	</node>
+
+</launch>

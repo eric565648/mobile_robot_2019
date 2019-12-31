@@ -1,0 +1,67 @@
+# # Definitions of tags to detect
+#
+# ## General remarks
+#
+# - All length in meters
+# - Ellipsis (...) signifies that the previous element can be repeated multiple times.
+#
+# ## Standalone tag definitions
+# ### Remarks
+#
+# - name is optional
+#
+# ### Syntax
+#
+# standalone_tags:
+#   [
+#     {id: ID, size: SIZE, name: NAME},
+#     ...
+#   ]
+standalone_tags:
+  [
+    {id: 4, size: 0.16, name: tag4},
+    {id: 5, size: 0.16, name: tag5},
+    {id: 6, size: 0.16, name: tag6},
+  ]
+# ## Tag bundle definitions
+# ### Remarks
+#
+# - name is optional
+# - x, y, z have default values of 0 thus they are optional
+# - qw has default value of 1 and qx, qy, qz have default values of 0 thus they are optional
+#
+# ### Syntax
+#
+# tag_bundles:
+#   [
+#     {
+#       name: 'CUSTOM_BUNDLE_NAME',
+#       layout:
+#         [
+#           {id: ID, size: SIZE, x: X_POS, y: Y_POS, z: Z_POS, qw: QUAT_W_VAL, qx: QUAT_X_VAL, qy: QUAT_Y_VAL, qz: QUAT_Z_VAL},
+#           ...
+#         ]
+#     },
+#     ...
+#   ]
+tag_bundles:
+  [
+    {
+      name: 'GATE1',
+      layout:
+        [
+          {id: 4, size: 0.16, x: -0.36, y: 0.58, z: 0},
+          {id: 5, size: 0.16, x: 0.05, y: 1.15, z: 0},
+          {id: 6, size: 0.16, x: 0.63, y: 0.57, z: 0}
+        ]
+    },
+    {
+      name: 'GATE2',
+      layout:
+        [
+          {id: 24, size: 0.16, x: 0.5, y: 1.44, z: 0.6},
+          {id: 25, size: 0.16, x: 0.5, y: 0.25, z: 2.56},
+          {id: 26, size: 0.16, x: 0.5, y: -1.44, z: 1.1}
+        ]
+    },
+  ]

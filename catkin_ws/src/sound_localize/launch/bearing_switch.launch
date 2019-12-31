@@ -1,0 +1,8 @@
+<launch>
+	<arg name="pkg_name" value="sound_localize"/>
+	<arg name="node_name" value="bearing_detection_switch"/>
+
+  <node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)"  output="screen">
+	</node>
+
+</launch>

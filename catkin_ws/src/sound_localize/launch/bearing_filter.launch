@@ -1,0 +1,10 @@
+<launch>
+	<arg name="pkg_name" value="sound_localize"/>
+	<arg name="node_name" value="bearing_filter"/>
+	<arg name="filter_threshold" default="20"/>
+
+  <node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)"  output="screen">
+		<param name="filter_data_threshold" value="$(arg filter_threshold)" />
+	</node>
+
+</launch>
