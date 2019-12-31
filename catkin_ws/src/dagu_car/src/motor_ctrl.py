@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import Int64
+from std_msgs.msg import Int64, Float64MultiArray
 
 def listener_L(msg):
 #    print "pub L"
@@ -25,11 +25,26 @@ def pubMsg(vr, vl):
     msg_vl.data = vl
     listener_L(msg_vl)
 
+def listener(msg):
+
+    gain = 1.4
+    trim = -0.21
+    l = 0.5
+    base_line = 80
+
+    lin_v = msg.data[0]
+    omega_v = msg.data[1]
+
+    vr = (gain + trim) * (lin_v + 0.5*omega_v*base_line)
+    vl = (gain - trim) * (lin_v - 0.5*omega_v*base_line)
+
+    pubMsg(vr, vl)
+
 if __name__ == '__main__':
     rospy.init_node('motor_control_node', anonymous=False)
 
-    rospy.Subscriber("/left_cmd", Int64, listener_L)
-    rospy.Subscriber("/right_cmd", Int64, listener_R)
+    rospy.Subscriber("/motors_cmd", Float64MultiArray, listener)
+#    rospy.Subscriber("/motors_omega", Int64, listener_R)
 
     v = 0
     omega = 0
@@ -39,16 +54,23 @@ if __name__ == '__main__':
     base_line = 80
     rospy.loginfo('start')
 
-    while True:
-	gain = float(raw_input("right: "))
-	trim = float(raw_input("left: "))
+    while False:
+	gain = float(raw_input("gain: "))
+	trim = float(raw_input("trim: "))
+	lin_v = float(raw_input("linear velocity: "))
+	omega_v = float(raw_input("angular omega: "))
+	t_sec = float(raw_input("duration (sec): "))
 
-	vr = 100
-	vl = 100
-	vr = (gain + trim) * vr
-	vl = (gain - trim) * vl
+	#vr = 100
+	#vl = 100
+	vr = (gain + trim) * (lin_v + 0.5*omega_v)
+	vl = (gain - trim) * (lin_v - 0.5*omega_v)
 
-	pubMsg(vr, vl)	
+	pubMsg(vr, vl)
+
+	rospy.sleep(t_sec)
+
+	pubMsg(0, 0)
 
     rospy.spin()
 
