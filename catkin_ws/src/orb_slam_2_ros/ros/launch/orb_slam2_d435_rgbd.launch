@@ -11,7 +11,7 @@
        <param name="publish_pose" type="bool" value="true" />
        <param name="localize_only" type="bool" value="false" />
        <param name="reset_map" type="bool" value="false" />
-       <param name="pointcloud_frame_id" type="string" value="/slam_map" />
+       <param name="pointcloud_frame_id" type="string" value="slam_map" />
        <param name="camera_frame_id" type="string" value="base_link" />
        <param name="min_num_kf_in_map" type="int" value="5" />
   </node>
