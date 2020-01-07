@@ -4,6 +4,8 @@ import rospy
 from apriltags2_ros.msg import AprilTagDetectionArray, AprilTagDetection
 from geometry_msgs.msg import PoseStamped, Pose
 from std_msgs.msg import Int64
+from tf import transformations as tr
+import tf
 
 TAG_ID = 40
 STATE_MAX = 6
@@ -22,16 +24,16 @@ class TargetMux(object):
         # variables
         self.state = 0
         self.face_pose = None
-        self.cream_pose = Pose()
+        self.cream_pose = None
         self.robot_pose = None
 
 
         # Publisher
         self.pubtarget = rospy.Publisher("/target_pose", PoseStamped, queue_size = 1)
         # Subscriber
-        subpose = rospy.Subscriber("/orb_slam2_rgbd/pose", PoseStamped, self.robot_cb, queue_size = 10)
-        subface = rospy.Subscriber("face_pose", PoseStamped, self.face_cb, queue_size = 10)
-        subtag = rospy.Subscriber("tag_detections", AprilTagDetectionArray, self.tag_cb, queue_size = 10)
+        subpose = rospy.Subscriber("/orb_slam2_rgbd/pose", PoseStamped, self.robot_cb, queue_size = 1)
+        subface = rospy.Subscriber("face_pose", PoseStamped, self.face_cb, queue_size = 1)
+        subtag = rospy.Subscriber("tag_detections", AprilTagDetectionArray, self.tag_cb, queue_size = 1)
         substate = rospy.Subscriber("state_input", Int64, self.state_cb, queue_size = 1)
 
     def robot_cb(self, msg):
@@ -39,6 +41,9 @@ class TargetMux(object):
         self.robot_pose = msg.pose
 
         if not FIND_CREAM:
+            print("not find cream")
+            if self.cream_pose == None:
+                self.cream_pose = Pose()
             trans = [self.robot_pose.position.x,self.robot_pose.position.y,self.robot_pose.position.z]
             rot = [self.robot_pose.orientation.x,self.robot_pose.orientation.y,self.robot_pose.orientation.z,self.robot_pose.orientation.w]
             transformation_matrix = tr.compose_matrix(angles = tr.euler_from_quaternion(rot), translate = trans)
@@ -53,12 +58,15 @@ class TargetMux(object):
 
     def tag_cb(self, msg):
 
+        global FIND_CREAM
+
         for tag in msg.detections:
             if tag.id[0] != TAG_ID:
                 continue
+            print("get cream")
             FIND_CREAM = True
-            self.cream_pose.position.x = tag.pose.pose.position.z
-            self.cream_pose.position.y = -1*tag.pose.pose.position.x
+            self.cream_pose.position.x = tag.pose.pose.pose.position.z
+            self.cream_pose.position.y = -1*tag.pose.pose.pose.position.x
 
     def state_cb(self, msg):
 
@@ -66,10 +74,12 @@ class TargetMux(object):
             self.state = msg.data
             print "Input New State: ", self.state
 
-    def process(arg):
+    def process(self):
 
         if self.robot_pose is None:
             return
+
+        print("Now State: ", self.state)
 
         msg_pose = PoseStamped()
 
@@ -80,15 +90,19 @@ class TargetMux(object):
             msg_pose.pose = self.face_pose
 
             if self.face_pose.position.x < 0.2 and self.face_pose.position.y < 0.2:
-                self.state = 1
+                self.state = 2
         # find cream
         elif self.state == 2:
+            if self.cream_pose == None:
+                return
             msg_pose.pose = self.cream_pose
 
-            if self.cream_pose.position.x < 0.02 and self.cream_pose.position.y < 0.02:
+            print("cx cy", self.cream_pose.position.x, self.cream_pose.position.y)
+
+            if -0.1 < self.cream_pose.position.x < 0.1 and -0.02 < self.cream_pose.position.y < 0.02:
                 self.state = 3
 
-        if self.state == 3:
+        elif self.state == 3:
             if self.face_pose == None:
                 return
             msg_pose.pose = self.face_pose
@@ -96,12 +110,11 @@ class TargetMux(object):
             if self.face_pose.position.x < 0.2 and self.face_pose.position.y < 0.2:
                 self.state = 4
 
-        if self.state == 4:
+        elif self.state == 4:
             msg_pose.pose = self.robot_pose
 
         self.pubtarget.publish(msg_pose)
 
-        print("Now State: ", self.state)
 
 if __name__ == '__main__':
     d = TargetMux()

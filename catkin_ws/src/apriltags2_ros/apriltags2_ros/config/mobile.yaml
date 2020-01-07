@@ -19,19 +19,11 @@
 #   ]
 standalone_tags:
   [
-    {id: 40, size: 0.163, name: tag40},
-    {id: 41, size: 0.163, name: tag41},
-    {id: 42, size: 0.163, name: tag42},
-    {id: 43, size: 0.163, name: tag43},
-    {id: 44, size: 0.163, name: tag44},
-    {id: 45, size: 0.163, name: tag45},
-    {id: 46, size: 0.163, name: tag46},
-    {id: 47, size: 0.163, name: tag47},
-    {id: 48, size: 0.163, name: tag48},
-    {id: 49, size: 0.163, name: tag49},
-    {id: 60, size: 0.163, name: tag60},
-    {id: 61, size: 0.163, name: tag61},
-    {id: 62, size: 0.163, name: tag62}
+    {id: 40, size: 0.06, name: tag40},
+    {id: 41, size: 0.06, name: tag41},
+    {id: 42, size: 0.06, name: tag42},
+    {id: 43, size: 0.06, name: tag43},
+    {id: 44, size: 0.06, name: tag44},
   ]
 # ## Tag bundle definitions
 # ### Remarks
