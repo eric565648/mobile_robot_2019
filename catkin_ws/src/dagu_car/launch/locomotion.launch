@@ -1,0 +1,13 @@
+<launch>
+	<arg name="pkg_name" value="dagu_car"/>
+	<arg name="node_name" value="locaomotion"/>
+
+	<node pkg="$(arg pkg_name)" type="motor_ctrl.py" name="motor_ctrl"  output="screen">
+	</node>
+	<node pkg="$(arg pkg_name)" type="motion_planning_v2.py" name="motion_planning"  output="screen">
+	</node>
+	<node pkg="rosserial_python" type="serial_node.py" name="rosserial"  output="screen">
+		<param name="port" value="/dev/ttyACM0"/>
+        </node>
+
+</launch>

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+import math
+import numpy as np
 import rospy
+import time
 from apriltags2_ros.msg import AprilTagDetectionArray, AprilTagDetection
 from geometry_msgs.msg import PoseStamped, Pose
 from std_msgs.msg import Int64
@@ -11,8 +14,9 @@ TAG_ID = 40
 STATE_MAX = 6
 
 FIND_CREAM = False
-CREAM_ORIGIN_X = 0.5
-CREAM_ORIGIN_Y = 0.8
+FIND_FACE = True
+CREAM_ORIGIN_X = 0.3
+CREAM_ORIGIN_Y = 0.6
 
 class TargetMux(object):
     """docstring for TargetMux."""
@@ -27,6 +31,7 @@ class TargetMux(object):
         self.cream_pose = None
         self.robot_pose = None
 
+        self.fg = Pose()
 
         # Publisher
         self.pubtarget = rospy.Publisher("/target_pose", PoseStamped, queue_size = 1)
@@ -41,18 +46,30 @@ class TargetMux(object):
         self.robot_pose = msg.pose
 
         if not FIND_CREAM:
-            print("not find cream")
+            #print("not find cream")
             if self.cream_pose == None:
                 self.cream_pose = Pose()
             trans = [self.robot_pose.position.x,self.robot_pose.position.y,self.robot_pose.position.z]
             rot = [self.robot_pose.orientation.x,self.robot_pose.orientation.y,self.robot_pose.orientation.z,self.robot_pose.orientation.w]
             transformation_matrix = tr.compose_matrix(angles = tr.euler_from_quaternion(rot), translate = trans)
-            new_mat = tr.inverse_matrix(transformation_matrix)
+            trans_c = [CREAM_ORIGIN_X,CREAM_ORIGIN_Y,0.08]
+            rot_c = [0, 0, 0, 1]
+            mat_c = tr.compose_matrix(angles = tr.euler_from_quaternion(rot_c), translate = trans_c)
+            inv_mat = tr.inverse_matrix(transformation_matrix)
+            new_mat = np.dot(inv_mat, mat_c)
             trans_new = tf.transformations.translation_from_matrix(new_mat)
-            self.cream_pose.position.x = trans_new[0] + CREAM_ORIGIN_X
-            self.cream_pose.position.y = trans_new[1] + CREAM_ORIGIN_Y
+            self.cream_pose.position.x = trans_new[0]
+            self.cream_pose.position.y = trans_new[1]
+
+            #print("cream x: ", self.cream_pose.position.x)
+            #print("cream y: ", self.cream_pose.position.y)
 
     def face_cb(self, msg):
+
+        global FIND_FACE
+
+        if self.state == 3:
+            FIND_FACE = True
 
         self.face_pose = msg.pose
 
@@ -76,6 +93,8 @@ class TargetMux(object):
 
     def process(self):
 
+        global FIND_FACE
+
         if self.robot_pose is None:
             return
 
@@ -89,8 +108,19 @@ class TargetMux(object):
                 return
             msg_pose.pose = self.face_pose
 
-            if self.face_pose.position.x < 0.2 and self.face_pose.position.y < 0.2:
-                self.state = 2
+            if -0.23 < self.face_pose.position.x < 0.23 and -0.2 < self.face_pose.position.y < 0.2:
+                self.state = 1
+                self.fg.position.x = self.robot_pose.position.x
+                self.fg.position.y = self.robot_pose.position.y
+                FIND_FACE = False
+
+        elif self.state == 1:
+            msg_pose.pose.position.x = 0
+            self.pubtarget.publish(msg_pose)
+            print("state 1 sleep")
+            time.sleep(7)
+            self.state = 2
+
         # find cream
         elif self.state == 2:
             if self.cream_pose == None:
@@ -99,19 +129,48 @@ class TargetMux(object):
 
             print("cx cy", self.cream_pose.position.x, self.cream_pose.position.y)
 
-            if -0.1 < self.cream_pose.position.x < 0.1 and -0.02 < self.cream_pose.position.y < 0.02:
+            if -0.23 < self.cream_pose.position.x < 0.23 and -0.05 < self.cream_pose.position.y < 0.05:
                 self.state = 3
 
         elif self.state == 3:
-            if self.face_pose == None:
-                return
-            msg_pose.pose = self.face_pose
 
-            if self.face_pose.position.x < 0.2 and self.face_pose.position.y < 0.2:
-                self.state = 4
+            print("State 3")
+            msg_pose.pose.position.x = 0.1
+            msg_pose.pose.position.y = 0
+            self.pubtarget.publish(msg_pose)
+            time.sleep(3)
+            msg_pose.pose.position.x = 0
+            self.pubtarget.publish(msg_pose)
+            print("state 3 sleep")
+            time.sleep(7)
+            self.state = 4
 
         elif self.state == 4:
-            msg_pose.pose = self.robot_pose
+            if self.face_pose == None:
+                return
+
+            if FIND_FACE == True:
+                msg_pose.pose = self.face_pose
+            else:
+                trans = [self.robot_pose.position.x,self.robot_pose.position.y,self.robot_pose.position.z]
+                rot = [self.robot_pose.orientation.x,self.robot_pose.orientation.y,self.robot_pose.orientation.z,self.robot_pose.orientation.w]
+                transformation_matrix = tr.compose_matrix(angles = tr.euler_from_quaternion(rot), translate = trans)
+                trans_c = [self.fg.position.x,self.fg.position.y,0.08]
+                rot_c = [0, 0, 0, 1]
+                mat_c = tr.compose_matrix(angles = tr.euler_from_quaternion(rot_c), translate = trans_c)
+                inv_mat = tr.inverse_matrix(transformation_matrix)
+                new_mat = np.dot(inv_mat, mat_c)
+                trans_new = tf.transformations.translation_from_matrix(new_mat)
+                msg_pose.pose.position.x = trans_new[0]
+                msg_pose.pose.position.y = trans_new[1]
+
+            print("face x: ", trans_new[0])
+            print("face y: ", trans_new[1])
+            if -0.23 < msg_pose.pose.position.x < 0.23 and -0.23 < msg_pose.pose.position.y < 0.2:
+                self.state = 5
+
+        elif self.state == 5:
+            msg_pose.pose.position.x = 0
 
         self.pubtarget.publish(msg_pose)
 

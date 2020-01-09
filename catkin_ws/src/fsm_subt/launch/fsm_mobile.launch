@@ -1,0 +1,10 @@
+<launch>
+	<arg name="pkg_name" value="fsm_subt"/>
+	<arg name="node_name" value="target_mux"/>
+
+	<node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)"  output="screen">
+	</node>
+	<node pkg="face_detection" type="face_detection.py" name="face_detection"  output="screen">
+	</node>
+
+</launch>

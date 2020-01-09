@@ -62,7 +62,7 @@ class FaceDetection(object):
                 print("Face too far")
                 continue
 
-            zc = float(zc)/10000. # SR300 is a bit weird
+            zc = float(zc)/1000. # SR300 is a bit weird
             rx, ry, rz = self.getXYZ((x+w/2), (y+h/2), zc)
             if rx > faces_points[0]:
                 continue

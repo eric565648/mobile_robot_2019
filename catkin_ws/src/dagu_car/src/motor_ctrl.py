@@ -27,8 +27,8 @@ def pubMsg(vr, vl):
 
 def listener(msg):
 
-    gain = 1.4
-    trim = -0.21
+    gain = 2
+    trim = 0.1
     l = 0.5
     base_line = 80
 
